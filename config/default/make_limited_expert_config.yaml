@@ -1,0 +1,4 @@
+model_name: xglm-564M
+language: ""
+num_units: 2000
+base_path: /base_path

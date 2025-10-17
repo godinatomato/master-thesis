@@ -1,0 +1,10 @@
+model_name_or_path: xglm-564M
+model_cache: null
+tokenizer_cache: null
+data_path: assets/Language
+langs: ""
+responses_path: どうしよう
+seq_len: 256
+num_per_lang: 10000
+inf_batch_size: 1
+device: null
