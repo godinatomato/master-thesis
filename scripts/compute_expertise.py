@@ -37,10 +37,6 @@ def analyze_expertise_for_lang(
         print(f"No responses found for lang {lang}")
         return
 
-    assert (
-        labels_int is not None
-    ), "Cannot compute expertise, did not find any labels in cached responses."
-
     if not responses:
         print(f"Found response files but could not load them for lang {lang}")
         return

@@ -3,43 +3,14 @@
 # Copyright (C) 2022 Apple Inc. All Rights Reserved.
 #
 
-import typing as t
 import json
 import pathlib
-from typing import List, Iterable, Dict, Union, Tuple, Optional
+from typing import Any, List, Iterable, Dict, Union, Tuple, Optional
 
 import numpy as np
 import pandas as pd
 from torch.utils.data import Dataset
 from tokenizer import PytorchTransformersTokenizer
-
-
-def lang_list_to_df(
-    langs_list_or_file: Union[pathlib.Path, Iterable[str]],
-) -> pd.DataFrame:
-    assert isinstance(langs_list_or_file, (pathlib.Path, list))
-    print(langs_list_or_file)
-    if isinstance(langs_list_or_file, pathlib.Path):
-        try:
-            lang_df = pd.read_csv(langs_list_or_file)
-        except Exception as exc:
-            raise RuntimeError(f"Error reading langs file. {exc}")
-    else:
-        try:
-            c_groups = []
-            c_names = []
-            for c in langs_list_or_file:
-                lang_group, name = c.split("/")
-                c_groups.append(lang_group)
-                c_names.append(name)
-            lang_df = pd.DataFrame(data={"group": c_groups, "lang": c_names})
-        except Exception as exc:
-            raise RuntimeError(
-                f"Error parsing lang list (must be comma separated). {exc}"
-            )
-
-    print(lang_df)
-    return lang_df
 
 
 class DatasetForSeqModels(Dataset):
@@ -207,3 +178,25 @@ class LangDataset(DatasetForSeqModels):
     @property
     def lang_group(self) -> str:
         return self._lang_group
+
+
+class ICLPromptDataset(Dataset):
+    def __init__(self, processed_data: List[Dict[str, Any]]):
+        self.data = processed_data
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx: int) -> Dict[str, Any]:
+        return self.data[idx]
+
+    """
+    def __getitem__(self, idx: int) -> Dict[str, Any]:
+        sample = self.data[idx]
+
+        return {
+            "prompt": sample["prompt"],
+            "true_label_id": sample["true_label_id"],
+            "true_label_string": sample["true_label_string"],
+        }
+    """

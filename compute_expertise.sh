@@ -1,3 +1,6 @@
+base_path="~/lang_neuron/"
+data_path="Language"
+
 model_name=$1
 language=$2
 
@@ -12,5 +15,5 @@ else
   exit
 fi
 
-cp config/default/compute_responses_config.yaml config/
-python scripts/compute_responses.py model_name=${full_model_name} lang=${language}
+cp config/default/compute_expertise_config.yaml config/
+python scripts/compute_expertise.py model_name=${full_model_name} root_dir=${base_path}${data_path} langs=sense/${language}

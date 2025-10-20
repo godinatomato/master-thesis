@@ -1,4 +1,6 @@
-model_name: xglm-564M
+model_name_or_path: xglm-564M
+model_cache: null
+tokenizer_cache: null
 data_path: assets
 data_type: Language
 lang: en
