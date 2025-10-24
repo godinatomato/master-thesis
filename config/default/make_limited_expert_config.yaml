@@ -1,4 +1,7 @@
-model_name: xglm-564M
-language: ""
+config_name: make_limited_expert
+
+model_name: facebook/xglm-564M
+output_dir: output
+lang: en
 num_units: 2000
-base_path: /base_path
+data_type: Language

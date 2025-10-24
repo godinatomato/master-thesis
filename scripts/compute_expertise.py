@@ -8,18 +8,16 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-import pathlib
+from pathlib import Path
 
 import hydra
 
-from neuron.data import lang_list_to_df
 from neuron.expertise import ExpertiseResult
 from neuron.responses import read_responses_from_cached
 
 
 def analyze_expertise_for_lang(
-    lang_dir: pathlib.Path,
-    lang_group: str,
+    lang_dir: Path,
     lang: str,
 ):
     cached_responses_dir = lang_dir / "responses"
@@ -48,7 +46,6 @@ def analyze_expertise_for_lang(
         responses=responses,
         labels=labels_int,
         lang=lang,
-        lang_group=lang_group,
         forcing=True,
     )
     expertise_result.save(lang_exp_dir)
@@ -58,25 +55,14 @@ def analyze_expertise_for_lang(
     config_path="../config", config_name="compute_expertise_config", version_base=None
 )
 def main(cfg):
-    root_dir = cfg.root_dir
-
-    if not cfg.langs:
-        assert (root_dir / "lang_list.csv").exists()
-        langs_requested = root_dir / "lang_list.csv"
-    else:
-        langs_requested = cfg.langs.split(",")
-
-    lang_df = lang_list_to_df(langs_requested)
-
     model_short_name = cfg.model_name.rstrip("/").split("/")[-1]
-
-    for _, row in lang_df.iterrows():
-        lang_dir = root_dir / model_short_name / row["group"] / row["lang"]
-        analyze_expertise_for_lang(
-            lang_dir=lang_dir,
-            lang=row["lang"],
-            lang_group=row["group"],
-        )
+    output_dir = Path(cfg.output_dir)
+    lang_dir = output_dir / model_short_name / cfg.data_type / cfg.lang
+    
+    analyze_expertise_for_lang(
+        lang_dir=lang_dir,
+        lang=cfg.lang,
+    )
 
 
 if __name__ == "__main__":

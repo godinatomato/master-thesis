@@ -1,8 +1,6 @@
-base_path="~/lang_neuron/"
-data_path="Language"
-
 model_name=$1
 language=$2
+data_type=$3
 
 if [[ ${model_name} == *"xglm"* ]]; then
   full_model_name="facebook/${model_name}"
@@ -16,4 +14,4 @@ else
 fi
 
 cp config/default/compute_expertise_config.yaml config/
-python scripts/compute_expertise.py model_name=${full_model_name} root_dir=${base_path}${data_path} langs=sense/${language}
+python scripts/compute_expertise.py model_name=${full_model_name} lang=${language} data_type=${data_type}

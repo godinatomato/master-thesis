@@ -3,14 +3,19 @@
 # Copyright (C) 2022 Apple Inc. All Rights Reserved.
 #
 
+import os
+import sys
+
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 import json
 import pathlib
 from typing import Any, List, Iterable, Dict, Union, Tuple, Optional
 
 import numpy as np
-import pandas as pd
 from torch.utils.data import Dataset
-from tokenizer import PytorchTransformersTokenizer
+
+from neuron.tokenizer import PytorchTransformersTokenizer
 
 
 class DatasetForSeqModels(Dataset):
@@ -132,7 +137,6 @@ class LangDataset(DatasetForSeqModels):
         with json_file.open("r", encoding="utf-8") as fp:
             json_data = json.load(fp)
         self._lang = json_data["lang"]
-        self._lang_group = json_data["group"]
         super().__init__(
             path=json_file,
             seq_len=seq_len,
@@ -144,6 +148,7 @@ class LangDataset(DatasetForSeqModels):
     def _load_data(
         self,
         path: pathlib.Path,
+        seq_len: int = 1000,
         num_per_lang: int = None,
         random_seed: int = None,
     ) -> Tuple[List[str], List[int]]:
@@ -175,28 +180,22 @@ class LangDataset(DatasetForSeqModels):
     def lang(self) -> str:
         return self._lang
 
-    @property
-    def lang_group(self) -> str:
-        return self._lang_group
-
 
 class ICLPromptDataset(Dataset):
-    def __init__(self, processed_data: List[Dict[str, Any]]):
-        self.data = processed_data
+    def __init__(self, prompts: List[str], labels: Union[List[str], None]):
+        self.prompts = prompts
+        self.labels = labels
 
     def __len__(self):
-        return len(self.data)
+        return len(self.prompts)
 
     def __getitem__(self, idx: int) -> Dict[str, Any]:
-        return self.data[idx]
-
-    """
-    def __getitem__(self, idx: int) -> Dict[str, Any]:
-        sample = self.data[idx]
-
-        return {
-            "prompt": sample["prompt"],
-            "true_label_id": sample["true_label_id"],
-            "true_label_string": sample["true_label_string"],
-        }
-    """
+        if self.labels:
+            return {
+                "prompt": self.prompts[idx],
+                "label": self.labels[idx]
+            }
+        else:
+            return {
+                "prompt": self.prompts[idx]
+            }

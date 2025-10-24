@@ -13,5 +13,6 @@ else
   exit
 fi
 
-cp config/default/compute_responses_config.yaml config/
-python scripts/compute_responses.py model_name=${full_model_name} lang=${language} data_type=${data_type}
+cp config/default/generate_icl_config.yaml config/
+python scripts/generate_icl.py model_name=${full_model_name} lang=${language} data_type=${data_type} num_units=2000
+python scripts/generate_icl.py model_name=${full_model_name} lang=${language} data_type=${data_type} num_units=0

@@ -1,59 +1,62 @@
+#
+# For licensing see accompanying LICENSE file.
+# Copyright (C) 2022 Apple Inc. All Rights Reserved.
+#
+
 import os
+from pathlib import Path
 
 import hydra
 import pandas as pd
 
 
 def make_limited_expert(
-    model_name,
-    language,
-    threshold,
-    base_path="/groups/gcb50389/takeshi.kojima/lang_neuron/Language/",
+    num_units: int,
+    output_dir: Path,
 ):
-    top_file = f"{base_path}{model_name}/sense/{language}/expertise/expertise_limited_{int(threshold/2)}_top.csv"
-    bottom_file = f"{base_path}{model_name}/sense/{language}/expertise/expertise_limited_{int(threshold/2)}_bottom.csv"
-    both_file = f"{base_path}{model_name}/sense/{language}/expertise/expertise_limited_{threshold}_both.csv"
+    top_file_path = output_dir / f"expertise_limited_{int(num_units / 2)}_top.csv"
+    bottom_file_path = output_dir / f"expertise_limited_{int(num_units / 2)}_bottom.csv"
+    both_file_path = output_dir / f"expertise_limited_{num_units}_both.csv"
 
     if (
-        os.path.isfile(top_file)
-        and os.path.isfile(bottom_file)
-        and os.path.isfile(both_file)
+        top_file_path.exists()
+        and bottom_file_path.exists()
+        and both_file_path.exists()
     ):
         print("expertise_limited files already exist. Skip.")
         return
 
-    df = pd.read_csv(
-        f"{base_path}{model_name}/sense/{language}/expertise/expertise.csv"
-    )
+    df = pd.read_csv(output_dir / "expertise.csv")
 
     # Top N
-    df2 = df.sort_values("ap", ascending=False)
-    df2 = df2.head(int(threshold / 2))
+    df_top = df.sort_values("ap", ascending=False)
+    df_top = df_top.head(int(num_units / 2))
 
     # Bottom N
-    df3 = df.sort_values("ap", ascending=True)
-    df3 = df3.head(int(threshold / 2))
+    df_bottom = df.sort_values("ap", ascending=True)
+    df_bottom = df_bottom.head(int(num_units / 2))
 
     # Top & Bottom
-    df4 = pd.concat([df2, df3], axis=0, ignore_index=True)
+    df_both = pd.concat([df_top, df_bottom], axis=0, ignore_index=True)
 
     # Save to files
-    df2.to_csv(top_file, index=False)
-    df3.to_csv(bottom_file, index=False)
-    df4.to_csv(both_file, index=False)
+    df_top.to_csv(top_file_path, index=False)
+    df_bottom.to_csv(bottom_file_path, index=False)
+    df_both.to_csv(both_file_path, index=False)
 
 
 @hydra.main(
     config_path="../config",
-    config_name="make_limited_expertise_config",
+    config_name="make_limited_expert_config",
     version_base=None,
 )
 def main(cfg):
+    model_short_name = cfg.model_name.rstrip("/").split("/")[-1]
+    output_dir = Path(cfg.output_dir) / model_short_name / cfg.data_type / cfg.lang / "expertise"
+    
     make_limited_expert(
-        model_name=cfg.model_name,
-        language=cfg.language,
-        threshold=cfg.num_units,
-        base_path=cfg.base_path,
+        num_units=cfg.num_units,
+        output_dir=output_dir,
     )
 
 

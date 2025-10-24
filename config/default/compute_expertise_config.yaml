@@ -1,3 +1,6 @@
-root_dir: /root_dir/
-langs: ""
-model_name: xglm-564M
+config_name: compute_expertise
+
+output_dir: output
+lang: en
+data_type: Language
+model_name: facebook/xglm-564M

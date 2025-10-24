@@ -44,8 +44,7 @@ def average_precision(
 class ExpertiseResult:
 
     def __init__(self) -> None:
-        self.concept: str = ""
-        self.concept_group: str = ""
+        self.lang: str = ""
         self.response_names: t.List[str] = []
         self._num_responses_per_layer: t.List[int] = []
         self.ap: t.Dict = {}
@@ -58,14 +57,12 @@ class ExpertiseResult:
 
     def build(
         self,
-        concept: str,
-        concept_group: str,
+        lang: str,
         responses: t.Dict,
         labels: t.Sequence[int],
         forcing: bool = True,
     ) -> None:
-        self.concept = concept
-        self.concept_group = concept_group
+        self.lang = lang
         self.response_names = sorted(list(responses.keys()))
 
         self.forcing = forcing
@@ -124,8 +121,7 @@ class ExpertiseResult:
 
         with (dir / "expertise_info.json").open("r") as fp:
             json_data = json.load(fp)
-            self.concept = json_data["concept"]
-            self.concept_group = json_data["group"]
+            self.lang = json_data["lang"]
 
     def export_as_pandas(self) -> pd.DataFrame:
         df = pd.DataFrame()
@@ -155,16 +151,14 @@ class ExpertiseResult:
             [range(r_len) for r_len in self._num_responses_per_layer]
         ).astype(np.uint32)
         df["uuid"] = np.arange(len(df))
-        df["concept"] = self.concept
-        df["group"] = self.concept_group
+        df["lang"] = self.lang
         return df
 
     def export_extra_info_json(self) -> t.Dict:
         aps_list = np.concatenate([v for v in self.ap.values()])
 
         info_json = {
-            "concept": self.concept,
-            "group": self.concept_group,
+            "lang": self.lang,
             "max_ap": float(np.max(aps_list)),
             "layer_names": self.response_names,
             "total_neurons": int(len(aps_list)),

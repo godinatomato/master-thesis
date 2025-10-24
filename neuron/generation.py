@@ -8,6 +8,7 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
+import pickle
 from typing import Sequence, Dict, Tuple, Union, List
 
 import numpy as np
@@ -147,8 +148,6 @@ def force_units_hooks(
             range((top_n - 1) * num_units, top_n * num_units)
         ]
 
-    print(df)
-
     for layer_name, layer_df in df.groupby("layer", sort=True):
         units_force = torch.tensor(layer_df["unit"].values, dtype=torch.int64)
         if value == "zero":
@@ -164,3 +163,31 @@ def force_units_hooks(
         )
 
     return model, df
+
+
+def get_translation_prompt(input_path: str, prompt_format_id: int, seed: int) -> str:
+    with open(input_path, "rb") as f:
+        source_text = pickle.load(f)[seed - 1]["en"]
+    
+    if prompt_format_id == 0:
+        prompt = f"Translate a sentence from English to a target language.\nEnglish: {source_text}\nTarget Language:"
+    elif prompt_format_id == 1:
+        prompt = f"Translate English to a target language.\nEnglish: {source_text}\nTarget Language:"
+    elif prompt_format_id == 2:
+        prompt = f"Translate an English sentence into a target language.\nEnglish: {source_text}\nTarget Language:"
+    elif prompt_format_id == 3:
+        prompt = f"Translate an English sentence into German.\nEnglish: {source_text}\nGerman:"
+    elif prompt_format_id == 4:
+        prompt = f"Translate an English sentence into Japanese.\nEnglish: {source_text}\nJapanese:"
+    elif prompt_format_id == 5:
+        prompt = f"Translate an English sentence into French.\nEnglish: {source_text}\nFrench:"
+    elif prompt_format_id == 6:
+        prompt = f"Translate an English sentence into Spanish.\nEnglish: {source_text}\nSpanish:"
+    elif prompt_format_id == 7:
+        prompt = f"Translate an English sentence into Chinese.\nEnglish: {source_text}\nChinese:"
+    else:
+        raise ValueError(
+            "error! prompt_format_id_for_translation is not properly defined!"
+        )
+        
+    return prompt

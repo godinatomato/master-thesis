@@ -1,22 +1,22 @@
-import random
+import os
+import sys
 
-from torch.data.utils import Dataset
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 from typing import Dict, Any, List
 
+from torch.utils.data import Dataset
 
-LANG_CONFIG = {
-    "ja": {
-        "task_prefix": "以下の前提文と仮説文の関係性を、例示を参考にして「含意」「中立」「矛盾」から一つ判断し、回答を生成してください。",
-        "premise": "前提",
-        "hypothesis": "仮説",
-        "relation": "関係性",
-        "labels": {0: "含意", 1: "中立", 2: "矛盾"},
-    },
+from neuron.data import ICLPromptDataset
+
+
+XNLI_CONFIG = {
     "en": {
         "task_prefix": "Determine the relationship between the premise and the hypothesis from the following three options: entailment, neutral, or contradiction, based on the examples provided.",
         "premise": "Premise",
         "hypothesis": "Hypothesis",
         "relation": "Relationship",
+        "query": "Query",
         "labels": {0: "entailment", 1: "neutral", 2: "contradiction"},
     },
     "de": {
@@ -24,6 +24,7 @@ LANG_CONFIG = {
         "premise": "Prämisse",
         "hypothesis": "Hypothese",
         "relation": "Beziehung",
+        "query": "Frage",
         "labels": {0: "Implikation", 1: "Neutral", 2: "Widerspruch"},
     },
     "es": {
@@ -31,6 +32,7 @@ LANG_CONFIG = {
         "premise": "Premisa",
         "hypothesis": "Hipótesis",
         "relation": "Relación",
+        "query": "pregunta",
         "labels": {0: "Implicación", 1: "Neutral", 2: "Contradicción"},
     },
     "fr": {
@@ -38,6 +40,7 @@ LANG_CONFIG = {
         "premise": "Prémisse",
         "hypothesis": "Hypothèse",
         "relation": "Relation",
+        "query": "question",
         "labels": {0: "Implication", 1: "Neutre", 2: "Contradiction"},
     },
     "zh": {
@@ -45,45 +48,33 @@ LANG_CONFIG = {
         "premise": "前提",
         "hypothesis": "假设",
         "relation": "关系",
+        "query": "问题",
         "labels": {0: "蕴涵", 1: "中立", 2: "矛盾"},
     },
 }
 
 
-def create_icl_prompt(
-    test_sample_index: int, all_dataset: Dataset, num_examples: int, lang: str
+def create_xnli_prompt(
+    target: str, demonstrations: List[str], config: Dict[str, Any]
 ) -> str:
-    config = LANG_CONFIG[lang]
-
-    target_sample = all_dataset[test_sample_index]
-
-    all_indices = list(range(len(all_dataset)))
-    available_indices = [i for i in all_indices if i != test_sample_index]
-
-    if len(available_indices) < num_examples:
-        random_indices = available_indices
-    else:
-        random_indices = random.sample(available_indices, num_examples)
-
     # prefix
     prompt = config["task_prefix"] + "\n\n"
 
     # demonstrations
-    for i, idx in enumerate(random_indices):
-        example = all_dataset[idx]
-        premise = example["premise"]
-        hypothesis = example["hypothesis"]
-        label = config["labels"][example["label"]]
+    for d in demonstrations:
+        premise = d["premise"]
+        hypothesis = d["hypothesis"]
+        label = config["labels"][d["label"]]
 
         prompt += f"--- {config['premise']}: {premise}\n"
         prompt += f"--- {config['hypothesis']}: {hypothesis}\n"
         prompt += f"--- {config['relation']}: {label}\n\n"
 
     # query
-    target_premise = target_sample["premise"]
-    target_hypothesis = target_sample["hypothesis"]
+    target_premise = target["premise"]
+    target_hypothesis = target["hypothesis"]
 
-    prompt += "--- Query ---\n"
+    prompt += f"--- {config['query']} ---\n"
     prompt += f"--- {config['premise']}: {target_premise}\n"
     prompt += f"--- {config['hypothesis']}: {target_hypothesis}\n"
     prompt += f"--- {config['relation']}: "
@@ -91,25 +82,25 @@ def create_icl_prompt(
     return prompt
 
 
-def preprocess_for_icl(
-    dataset: Dataset, num_examples: int, lang: str
-) -> List[Dict[str, Any]]:
-    new_data = []
-
-    dataset_with_index = dataset.add_column("original_index", list(range(len(dataset))))
-
-    for i, sample in enumerate(dataset_with_index):
-        icl_prompt_text = create_icl_prompt(
-            sample["original_index"], dataset_with_index, num_examples, lang
+def create_icl_dataset(
+    data: Dict[str, Any], dataset_name: str, n_examples: int, lang: str
+) -> List[str]:
+    if dataset_name == "xnli":
+        targets = data["targets"]
+        demonstrations = data["demonstrations"]
+        config = XNLI_CONFIG[lang]
+        
+        prompts = [
+            create_xnli_prompt(targets[i], demonstrations[i * n_examples:i * (n_examples + 1)], config)
+            for i in range(len(targets))
+        ]
+        labels = [t["label"] for t in targets]
+        dataset = ICLPromptDataset(
+            prompts=prompts,
+            labels=labels,
         )
-
-        true_label_string = LANG_CONFIG["en"]["labels"][sample["label"]]
-
-        new_sample = {
-            "prompt": icl_prompt_text,
-            "true_label_id": sample["label"],
-            "true_label_string": true_label_string,
-        }
-        new_data.append(new_sample)
-
-    return new_data
+    else:
+        raise ValueError(f"Dataset {dataset_name} is not supported.")
+    
+    return dataset
+    

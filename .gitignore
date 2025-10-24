@@ -1,2 +1,5 @@
 lang_neuron/
 venv/
+output/
+outputs/
+config/*

@@ -1,9 +1,11 @@
-model_name: xglm-564M
+config_name: compute_responses
+
+model_name: facebook/xglm-564M
 data_path: assets
 data_type: Language
 lang: en
 responses_path: output
-seq_len: 256
+seq_len: 1024
 num_per_lang: 10000
 inf_batch_size: 1
 device: null
