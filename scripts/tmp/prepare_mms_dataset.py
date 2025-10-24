@@ -25,11 +25,13 @@ dataset = load_dataset("Brand24/mms")
 
 for lang in LANGS:
     print(f"Creating dataset for {lang}...")
-    
+
     raw_data = {}
     subset = dataset.filter(lambda row: row["language"] == lang)
     for label_name, label in LABELS.items():
-        raw_data[label_name] = subset.filter(lambda row: row["label"] == label)["train"]["text"]
+        raw_data[label_name] = subset.filter(lambda row: row["label"] == label)[
+            "train"
+        ]["text"]
 
     for label_name, label in LABELS.items():
         processed_data = {
@@ -42,11 +44,15 @@ for lang in LANGS:
         }
         for l in LABELS.keys():
             if l == label_name:
-                processed_data["sentences"]["positive"].extend(random.sample(raw_data[l], N_POSITIVE_SAMPLES))
+                processed_data["sentences"]["positive"].extend(
+                    random.sample(raw_data[l], N_POSITIVE_SAMPLES)
+                )
             else:
-                processed_data["sentences"]["negative"].extend(random.sample(raw_data[l], N_NEGATIVE_SAMPLES))
+                processed_data["sentences"]["negative"].extend(
+                    random.sample(raw_data[l], N_NEGATIVE_SAMPLES)
+                )
 
-        with open(output_dir / f"{lang}_{label_name}.json", "w") as f:
-            json.dump(processed_data, f)
-    
+        with open(output_dir / f"{lang}_{label_name}.json", "w", encoding="utf-8") as f:
+            json.dump(processed_data, f, ensure_ascii=False, indent=4)
+
     del subset

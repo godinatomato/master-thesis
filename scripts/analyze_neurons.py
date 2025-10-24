@@ -13,6 +13,10 @@ root_dir = Path.cwd()
 
 MODEL_NAMES = ["xglm-564M", "bloom-1b7"]
 LANGS = ["de", "en", "es", "fr", "ja", "zh"]
+SENTIMENT_LABELS = ["positive", "neutral", "negative"]
+LANGS_BY_DATATYPE = [
+    "Language": LANGS
+]
 
 N_LAYERS = {
     "xglm-564M": 24,
