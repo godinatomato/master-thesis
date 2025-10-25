@@ -1,5 +1,5 @@
-MODEL_NAMES=("xglm-564M")
-LABELS=("positive" "neutral", "negative")
+MODEL_NAMES=("xglm-564M" "bloom-1b7")
+LABELS=("positive" "neutral" "negative")
 
 data_type="Sentiment" 
 

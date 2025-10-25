@@ -49,5 +49,5 @@ for label_name, label in LABELS.items():
                 random.sample(raw_data[l], N_NEGATIVE_SAMPLES)
             )
 
-        with open(output_dir / f"{label_name}.json", "w", encoding="utf-8") as f:
-            json.dump(processed_data, f, ensure_ascii=False, indent=4)
+    with open(output_dir / f"{label_name}.json", "w", encoding="utf-8") as f:
+        json.dump(processed_data, f, ensure_ascii=False, indent=4)
